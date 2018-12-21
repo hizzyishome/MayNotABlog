@@ -1,5 +1,5 @@
 ---
-title: 当一只活的springboot报错Cannot load driver class: com.mysql.jdbc.Driver时
+title: '当一只活的springboot报错Cannot load driver class: com.mysql.jdbc.Driver时'
 comments: true
 date: 2018-12-21 15:27:51
 updated: 2018-12-21 15:27:51
