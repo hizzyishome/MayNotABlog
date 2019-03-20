@@ -84,7 +84,10 @@ categories:
     3. C++： 提供指针   类可以多继承   需要程序员释放内存
 
 6. 字符型常量和字符串常量的区别
-    1. ``` char c = 'c';  String s = "sss";```
+    1.
+    ```java
+    char c = 'c';  String s = "sss";
+    ```
     2. 字符相当于ascII值，可以参加运算。字符串代表地址，即在内存中存放位置。
     3. char类型占2个字节 2*8bit = 16bit；字符串至少一个，结束标志（这句并不对，
     在C++中，以\0作为结束，但是在Java中，String是对象，有长度属性，不需要表示结尾）
@@ -218,3 +221,147 @@ categories:
     - 基本类型值，将值拷贝，进行值传递。对象传递的话，将对象的引用（地址）拷贝，进行值传递。
     但是地址的copy值指向同一个对象，方法对对象成员的改动，即改动了对象在内存里的值，会反映在外部。
     然而，如果直接换引用，是换了copy的引用，和外部原来的引用并没有关系。
+
+22. 线程,程序,进程的基本概念
+    1. 线程
+        - 与进程相似，比进程更小的执行单位。
+        - 一个进程在其执行的过程中可以产生多个线程。
+        - 与进程不同，多个线程共享同一块内存空间和一组系统资源，所以系统在产生一个线程，
+        或是在各个线程之间作切换工作时，负担要比进程小得多，也正因为如此，线程也被称为轻量级进程。
+    2. 程序
+        - 含有指令和数据的文件，被存储在磁盘或其他的数据存储设备中
+        - 程序是静态的代码。
+    3. 进程
+        - 是程序的一次执行过程，是系统运行程序的基本单位，进程是动态的。
+        - 系统运行一个程序即是一个进程从创建，运行到消亡的过程。
+        - 一个进程就是一个执行中的程序，它在计算机中一个指令接着一个指令地执行着，
+        每个进程还占有某些系统资源如CPU时间，内存空间，文件，文件，输入输出设备的使用权等。
+        - 当程序在执行时，将会被操作系统载入内存中。
+        - 线程是进程划分成的更小的运行单位。
+        - 线程和进程最大的不同在于，基本上各进程是独立的，而各线程则不一定，因为同一进程中的线程极有可能会相互影响。
+        - 进程属于操作系统的范畴，主要是同一段时间内，可以同时执行一个以上的程序，
+        而线程则是在同一程序内几乎同时执行一个以上的程序段。
+
+23. 线程基本状态
+
+|状态名称|Point|
+|---|---|
+|NEW|初始状态，已经构建，没有调用start()方法|
+|RUNNABLE|运行状态，就绪状态(调用start()方法，但还没有run) 　+　运行中状态|
+|BLOCKED|阻塞状态，阻塞于锁？|
+|WAITING|等待状态，需要其他线程通知或者中断|
+|TIME_WAITING|超时等待状态，指定时间自行返回|
+|TERMINATED|终止线程，执行完毕|
+
+24. final
+    1. 变量
+        - 基本数据类型在初始化之后便不能更改
+        - 引用类型初始化之后便不能再让其指向另一个对象
+    2. 类
+        - 类不能被继承。
+        - final类中的所有成员方法都会被隐式地指定为final方法。
+    3. 方法
+        - 方法锁定，以防任何继承类修改它的含义
+        - 早期的Java实现版本中，会将final方法转为内嵌调用。
+        但是如果方法过于庞大，可能看不到内嵌调用带来的任何性能提升
+        （现在的Java版本已经不需要使用final方法进行这些优化了）。
+        - 类中所有的private方法都隐式地指定为final。
+
+25. 异常
+    ```mermaid
+    graph TD;
+      Throwable-->Error;
+      Throwable-->Exception;
+      Error-->VirtulMachineError;
+      Error-->AWTError;
+      VirtulMachineError-->StackOverFlowError;
+      VirtulMachineError-->OutOfMemoryError;
+      Exception-->IOException;
+      Exception-->RuntimeException;
+      IOException-->EOFException;
+      IOException-->FileNotFoundException;
+      RuntimeException-->ArrithmeticException;
+      RuntimeException-->MissingResourceException;
+      RuntimeException-->ClassNotFoundException;
+      RuntimeException-->NullPointerException;
+      RuntimeException-->IllegalArgumentException;
+      RuntimeException-->ArrayIndexOutOfBoundsException;
+      RuntimeException-->UnknownTypeException;
+    ```
+    1. Error（错误）
+        - 程序无法处理的错误，表示运行应用程序中较严重问题。
+        - 大多数错误与代码编写者执行的操作无关，而表示代码运行时 JVM（Java 虚拟机）出现的问题。
+        例如，Java虚拟机运行错误（Virtual MachineError），当 JVM 不再有继续执行操作所需的内存资源时，
+        将出现 OutOfMemoryError。
+        - Error发生时，Java虚拟机（JVM）一般会选择线程终止。
+       - 这些错误表示故障发生于虚拟机自身、或者发生在虚拟机试图执行应用时，
+       如Java虚拟机运行错误（Virtual MachineError）、类定义错误（NoClassDefFoundError）等。
+       - 错误是不可查的，因为它们在应用程序的控制和处理能力之外，而且绝大多数是程序运行时不允许出现的状况。
+       - 对于设计合理的应用程序来说，即使确实发生了错误，本质上也不应该试图去处理它所引起的异常状况。
+       - 在 Java中，错误通过Error的子类描述。
+    2. Exception（异常）
+        - 程序本身可以处理的异常。
+        - RuntimeException异常由Java虚拟机抛出。
+        NullPointerException（要访问的变量没有引用任何对象时，抛出该异常）,
+        ArithmeticException（算术运算异常，一个整数除以0时，抛出该异常）,
+        ArrayIndexOutOfBoundsException （下标越界异常）。
+
+    **异常能被程序本身可以处理，错误无法处理。**
+
+    3. Throwable类常用方法
+        - public string getMessage():返回异常发生时的详细信息
+        - public string toString():返回异常发生时的简要描述
+        - public string getLocalizedMessage():返回异常对象的本地化信息。
+        使用Throwable的子类覆盖这个方法，可以声称本地化信息。
+        如果子类没有覆盖该方法，则该方法返回的信息与getMessage（）返回的结果相同
+        - public void printStackTrace():在控制台上打印Throwable对象封装的异常信息
+
+    4. 异常处理总结
+        - **try块：** 用于捕获异常。其后可接零个或多个catch块，如果没有catch块，则必须跟一个finally块。
+        - **catch 块：** 用于处理try捕获到的异常。
+        - **inally 块：** 无论是否捕获或处理异常，finally块里的语句都会被执行。
+        当在try块或catch块中遇到return语句时，finally语句块将在方法返回之前被执行。
+
+        - ***finally块不会被执行***
+            - 在finally语句块第一行发生了异常。 因为在其他行，finally块还是会得到执行
+            - 在前面的代码中用了System.exit(int)已退出程序。 exit是带参函数 ；若该语句在异常语句之后，finally会执行
+            - 程序所在的线程死亡。(后面两个在逗我咩QAQ，这不废话么)
+            - 关闭CPU。
+
+    4. 如果try语句里有return，返回的是try语句块中变量值。
+        1. 如果有返回值，就把返回值保存到局部变量中；
+        2. 执行jsr指令跳到finally语句里执行；
+        3. 执行完finally语句后，返回之前保存在局部变量表里的值。
+        4. 如果try，finally语句里均有return，忽略try的return，而使用finally的return.
+
+26. transient
+    - 阻止实例中那些用此关键字修饰的的变量序列化；
+    - 当对象被反序列化时，被transient修饰的变量值不会被持久化和恢复
+    - transient只能修饰变量，不能修饰类和方法。
+
+27. console键盘输入
+    - 通过 Scanner
+    ```java
+    Scanner input = new Scanner(System.in);
+    String s  = input.nextLine();
+    input.close();
+    ```
+    - 通过 BufferedReader
+    ```java
+    BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+    String s = input.readLine();
+    ```
+
+1. 数据类型
+    1. 基本类型
+
+|keyWord|size|range|default|
+|---|---|---|---|
+|boolean|1byte字节、8bit位|true，false JVM 会在编译时期将 boolean 类型的数据转换为 int，1 true，0 false|false|
+|byte|1byte字节、8bit位|能存256个数，正负各128个，0放在正数一半 --> -128~127|0|
+|char|2byte字节、16bit位|能存65536个，对应Ascii码表，不需要负数，0~65535|'\u0000'|
+|short|2byte字节、16bit位|能存65536个数，正负各32768个,0放正数一半 --> -32768~32767|0|
+|int|4byte字节、32bit位|能存4294967296个数，正负各2147483648个,0放正数一半 --> -2147483648~2147483647|0|
+|long|8byte字节、64bit位|能存4294967296个数，正负各一半,0放正数一半 --> 9223372036854775808~9223372036854775807|0L|
+|float|4byte字节、32bit位|符号位（sign）占用1位，用来表示正负数，指数位（exponent）占用8位，用来表示指数，小数位（fraction）占用23位，用来表示小数，不足位数补0。|0.0F|
+|double|8byte字节、64bit位|符号位（sign）占用1位，指数位（exponent）占用11位，小数位（fraction）占用52位，不足位数补0。|0.0D|
