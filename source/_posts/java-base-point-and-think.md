@@ -119,7 +119,7 @@ categories:
     2. 线程安全性
         - String final 常量线程安全
         - StringBuilder 没有对方法加同步锁，非线程安全
-        - StringBuffer  加了同步锁，线程安全
+        - StringBuffer  加了同步锁，线程安全  ，内部使用 synchronized 进行同步
     3. 性能
         - 对String变量改变赋值，生成新String对象，指针指向新的String对象
         - StringBuffer每次操作自己
@@ -355,13 +355,148 @@ categories:
 1. 数据类型
     1. 基本类型
 
-|keyWord|size|range|default|
-|---|---|---|---|
-|boolean|1byte字节、8bit位|true，false JVM 会在编译时期将 boolean 类型的数据转换为 int，1 true，0 false|false|
-|byte|1byte字节、8bit位|能存256个数，正负各128个，0放在正数一半 --> -128~127|0|
-|char|2byte字节、16bit位|能存65536个，对应Ascii码表，不需要负数，0~65535|'\u0000'|
-|short|2byte字节、16bit位|能存65536个数，正负各32768个,0放正数一半 --> -32768~32767|0|
-|int|4byte字节、32bit位|能存4294967296个数，正负各2147483648个,0放正数一半 --> -2147483648~2147483647|0|
-|long|8byte字节、64bit位|能存4294967296个数，正负各一半,0放正数一半 --> 9223372036854775808~9223372036854775807|0L|
-|float|4byte字节、32bit位|符号位（sign）占用1位，用来表示正负数，指数位（exponent）占用8位，用来表示指数，小数位（fraction）占用23位，用来表示小数，不足位数补0。|0.0F|
-|double|8byte字节、64bit位|符号位（sign）占用1位，指数位（exponent）占用11位，小数位（fraction）占用52位，不足位数补0。|0.0D|
+    |keyWord|package|size|range|default|
+    |---|---|---|---|---|
+    |boolean|Boolean|1byte字节、8bit位|true，false JVM 会在编译时期将 boolean 类型的数据转换为 int，1 true，0 false|false|
+    |byte|Byte|1byte字节、8bit位|能存256个数，正负各128个，0放在正数一半 --> -128~127|0|
+    |char|Character|2byte字节、16bit位|能存65536个，对应Ascii码表，不需要负数，0~65535|'\u0000'|
+    |short|Short|2byte字节、16bit位|能存65536个数，正负各32768个,0放正数一半 --> -32768~32767|0|
+    |int|Integer|4byte字节、32bit位|能存4294967296个数，正负各2147483648个,0放正数一半 --> -2147483648~2147483647|0|
+    |long|Long|8byte字节、64bit位|能存4294967296个数，正负各一半,0放正数一半 --> 9223372036854775808~9223372036854775807|0L|
+    |float|Float|4byte字节、32bit位|符号位（sign）占用1位，用来表示正负数，指数位（exponent）占用8位，用来表示指数，小数位（fraction）占用23位，用来表示小数，不足位数补0。|0.0F|
+    |double|Double|8byte字节、64bit位|符号位（sign）占用1位，指数位（exponent）占用11位，小数位（fraction）占用52位，不足位数补0。|0.0D|
+
+
+    2. 包装类型
+        ```java
+        Integer x = 2;     // 装箱
+        int y = x;         // 拆箱
+        ```
+    3. 缓存池
+        - new Integer(123) 每次都会新建一个对象；
+        - Integer.valueOf(123) 会使用缓存池中的对象，多次调用会取得同一个对象的引用。
+        - 先判断值是否在缓存池中，如果在的话就直接返回缓存池的内容。
+        ```java
+        public static Integer valueOf(int i) {
+            if (i >= IntegerCache.low && i <= IntegerCache.high)
+                return IntegerCache.cache[i + (-IntegerCache.low)];
+            return new Integer(i);
+        }
+        ```
+        - 自动装箱过程调用 valueOf() 方法，因此多个值相同且值在缓存池范围内的 Integer 实例使用自动装箱来创建，
+        那么就会引用相同的对象。
+        ```java
+        Integer m = 123;
+        Integer n = 123;
+        System.out.println(m == n); // true
+        }
+        ```
+
+2. String
+    1. 概：
+        - final 不可被继承。
+        - Java 8 内部使用 char 数组存储数据
+        - Java 9 改用 byte 数组存储字符串，同时使用 coder 来标识使用了哪种编码。
+    2. 不可变的好处
+        - 缓存 hash 值：因为 String 的 hash 值经常被使用，例如 String 用做 HashMap 的 key。
+        不可变的特性可以使得 hash 值也不可变，因此只需要进行一次计算。
+        - String Pool 的需要： 如果一个 String 对象已经被创建过了，那么就会从 String Pool 中取得引用。
+        只有 String 是不可变的，才可能使用 String Pool。
+        - 安全性：String 经常作为参数，String 不可变性可以保证参数不可变。
+        例如在作为网络连接参数的情况下如果 String 是可变的，那么在网络连接过程中，String 被改变，
+        改变 String 对象的那一方以为现在连接的是其它主机，而实际情况却不一定是。
+        - 线程安全:
+
+    3. String Pool
+        - 字符串常量池（String Pool）保存着所有字符串字面量（literal strings），
+        这些字面量在编译时期就确定。
+        - 当一个字符串调用 intern() 方法时，如果 String Pool 中已经存在一个字符串和该字符串值相等
+        （使用 equals() 方法进行确定），那么就会返回 String Pool 中字符串的引用；
+        否则，就会在 String Pool 中添加一个新的字符串，并返回这个新字符串的引用。
+        ```java
+         String s1 = new String("aaa");
+         String s2 = new String("aaa");
+         System.out.println(s1 == s2);           // false
+         String s3 = s1.intern();
+         String s4 = s1.intern();
+         System.out.println(s3 == s4);           // true
+        ```
+        - 采用字面量的形式创建字符串，会自动地将字符串放入 String Pool 中。
+        ```java
+        String s5 = "bbb";
+        String s6 = "bbb";
+        System.out.println(s5 == s6);  // true
+        ```
+        - 在 Java 7 之前，String Pool 被放在运行时常量池中，它属于永久代。
+        而在 Java 7，String Pool 被移到堆中。
+        这是因为永久代的空间有限，在大量使用字符串的场景下会导致 OutOfMemoryError 错误。
+    4. new String("abc")
+        - "abc" 属于字符串字面量，因此编译时期会在 String Pool 中创建一个字符串对象，指向这个 "abc" 字符串字面量
+        - 而使用 new 的方式会在堆中创建一个字符串对象。
+        ```java
+        public class NewStringTest {
+            public static void main(String[] args) {
+                String s = new String("abc");
+            }
+        }
+        ```
+        反编译得到
+        ```
+        // ...
+        Constant pool:
+        // ...
+           #2 = Class              #18            // java/lang/String
+           #3 = String             #19            // abc
+        // ...
+          #18 = Utf8               java/lang/String
+          #19 = Utf8               abc
+        // ...
+
+          public static void main(java.lang.String[]);
+            descriptor: ([Ljava/lang/String;)V
+            flags: ACC_PUBLIC, ACC_STATIC
+            Code:
+              stack=3, locals=2, args_size=1
+                 0: new           #2                  // class java/lang/String
+                 3: dup
+                 4: ldc           #3                  // String abc
+                 6: invokespecial #4                  // Method java/lang/String."<init>":(Ljava/lang/String;)V
+                 9: astore_1
+        // ...
+        ```
+        在 Constant Pool 中，#19 存储这字符串字面量 "abc"，
+        #3 是 String Pool 的字符串对象，它指向 #19 这个字符串字面量。
+        在 main 方法中，0: 行使用 new #2 在堆中创建一个字符串对象，
+        并且使用 ldc #3 将 String Pool 中的字符串对象作为 String 构造函数的参数。
+
+        -  String 构造函数
+        ```java
+        this.value = original.value;
+        this.hash = original.hash;
+        ```
+        将一个字符串对象作为另一个字符串对象的构造函数参数时，并不会完全复制 value 数组内容，而是都会指向同一个 value 数组。
+
+3. 运算
+    1. 参数传递 都是值传递，对象也是地址当成值传递
+    2. float 与 double
+    ```java
+    // float f = 1.1; //这个是把double赋值给了float，Java 不能隐式执行向下转型，因为这会使得精度降低。
+    float f = 1.1f;
+    ```
+    3. 隐式类型转换
+    ```java
+    //字面量 1 是 int 类型，它比 short 类型精度要高，因此不能隐式地将 int 类型下转型为 short 类型。
+    short s1 = 1;
+    // s1 = s1 + 1;
+
+    //但是使用 += 或者 ++ 运算符可以执行隐式类型转换。
+    s1 += 1;
+    // s1++;
+
+    s1 = (short) (s1 + 1);
+    ```
+
+    4. switch
+        - 从 Java 7 开始，可以在 switch 条件判断语句中使用 String 对象。
+        - switch 不支持 long，是因为 switch 的设计初衷是对那些只有少数的几个值进行等值判断，
+        如果值过于复杂，那么还是用 if 比较合适。
