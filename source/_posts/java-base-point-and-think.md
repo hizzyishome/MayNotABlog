@@ -547,4 +547,112 @@ categories:
                 2. 子类方法的返回类型必须是父类方法返回类型或为其子类型。
         2. 重载（Overload）
             - 存在于同一个类中，指一个方法与已经存在的方法名称上相同，但是参数类型、个数、顺序至少有一个不同。
-            
+            ```java
+            class A {
+                public String show(D obj) {
+                    return ("A and D");
+                }
+
+                public String show(A obj) {
+                    return ("A and A");
+                }
+            }
+
+            class B extends A {
+                public String show(B obj) {
+                    return ("B and B");
+                }
+
+                public String show(A obj) {
+                    return ("B and A");
+                }
+            }
+
+            class C extends B {
+            }
+
+            class D extends B {
+            }
+            ```
+            ```java
+            public class test {
+                public static void main(String[] args) {
+                    A a1 = new A();
+                    A a2 = new B();
+                    B b = new B();
+                    C c = new C();
+                    D d = new D();
+
+                    // a1为A类，b为B类，先找A类中show(B obj)，没有
+                    // 然后A类无父类，
+                    // 之后找A类中show(A obj)，因为B的父类为A，找到，显示A and A
+                    System.out.println(a1.show(b)); //A and A
+
+                    // a1为A类，c为C类，先找A类中show(C obj)，没有
+                    // 然后A类无父类，
+                    // 找A类中show(B obj)，因为C的父类是B，没有
+                    // 之后找A类中show(A obj)，因为B的父类为A，找到，显示A and A
+                    System.out.println(a1.show(c));//A and A
+
+                    // a1为A类，d为D类，先找A类中show(D obj)，找到，显示A and D
+                    System.out.println(a1.show(d));//A and D
+
+                    // a2为A类(是以B的基础new一个A，然后地址给a2，但是只有A类中方法，但是A的show(A)被子类B重写，调用这个方法就是子类)，
+                    // b为B类，先找A类中show(B obj)，没有
+                    // 然后A类无父类，
+                    // 然后，找A类中的show(B obj)，没有
+                    // 然后找A类中的show(A obj),找到，但是这个方法被B类重写了，所以调用了B类的show(A obj),所以 B and A
+                    System.out.println(a2.show(b));//B and A
+
+                    // a2为A类(是以B的基础new一个A，然后地址给a2，但是只有A类中方法，但是A的show(A)被子类B重写，调用这个方法就是子类)，
+                    // c为C类，先找A类中show(C obj)，没有
+                    // 然后A类无父类，
+                    // 然后，找A类中的show(B obj)，没有
+                    // 然后找A类中的show(A obj),找到，但是这个方法被B类重写了，所以调用了B类的show(A obj),所以 B and A
+                    System.out.println(a2.show(c));
+
+                    // a2为A类(是以B的基础new一个A，然后地址给a2，但是只有A类中方法，但是A的show(A)被子类B重写，调用这个方法就是子类)，
+                    // d为D类，先找A类中show(D obj)，有,所以 A and D
+                    System.out.println(a2.show(d));//A and D
+
+                    // b为B类，b为B类，先找B类中show(B obj)，找到，显示B and B
+                    System.out.println(b.show(b));//B and B
+
+                    // b为B类，c为C类，先找B类中show(C obj)，没有
+                    // B的父类为A，找A类中的show(C obj)，没有
+                    // 然后找B类中的show（B）找到，显示B and B
+                    System.out.println(b.show(c));//B and B
+
+                    // b为B类，d为D类，先找B类中show(D obj)，没有
+                    // B的父类为A，找A类中的show(D obj)，找到，显示A and D
+                    System.out.println(b.show(d));//A and D
+                }
+            }
+            ```
+    涉及到重写时，方法调用的优先级为：
+    1. this.show(O)
+    2. super.show(O)
+    3. this.show((super)O)
+    4. super.show((super)O)
+
+5. Object 通用方法
+    1. equals()
+        1. 等价关系
+            1. 自反性
+            2. 对称性
+            3. 传递性
+            4. 一致性 多次调用 equals() 方法结果不变
+            5. 与 null 的比较
+                - 对任何不是 null 的对象 x 调用 x.equals(null) 结果都为 false
+                - 对象是null在调用.equals()方法时会报空指针异常
+                - null == null 返回true
+        2. 等价与相等
+            - 对于基本类型，== 判断两个值是否相等，基本类型没有 equals() 方法。
+            - 对于引用类型，== 判断两个变量是否引用同一个对象，而 equals() 判断引用的对象是否等价。
+        3. 实现
+            - 检查是否为同一个对象的引用，如果是直接返回 true； if (this == o) return true;
+            - 传入对象是否为空，空返回false；检查是否是同一个类型，如果不是，直接返回 false；  if (o == null || getClass() != o.getClass()) return false;
+            - 将 Object 对象进行转型；EqualExample that = (EqualExample) o;
+            - 判断每个关键域是否相等。 判断你定义相等的每个成员变量是否相等
+
+    2. hashCode()
