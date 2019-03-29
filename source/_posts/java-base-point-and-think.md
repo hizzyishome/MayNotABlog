@@ -253,10 +253,11 @@ categories:
 |TIME_WAITING|超时等待状态，指定时间自行返回|
 |TERMINATED|终止线程，执行完毕|
 
-24. final
+24. <a name="final">final</a>
     1. 变量
         - 基本数据类型在初始化之后便不能更改
         - 引用类型初始化之后便不能再让其指向另一个对象
+        - 但是被引用的对象本身是可以修改的。
     2. 类
         - 类不能被继承。
         - final类中的所有成员方法都会被隐式地指定为final方法。
@@ -664,3 +665,180 @@ categories:
         然后组成一个 R 进制的整数。R 一般取 31，因为它是一个奇素数，如果是偶数的话，
         当出现乘法溢出，信息就会丢失，因为与 2 相乘相当于向左移一位。
         - 一个数与 31 相乘可以转换成移位和减法：`31*x == (x<<5)-x`，编译器会自动进行这个优化。
+        ```java
+        public int hashCode(char[] chars) {
+                int var1 = 0;
+                if (var1 == 0 && chars.length > 0) {
+                    char[] var2 = chars;
+
+                    for(int var3 = 0; var3 < chars.length; ++var3) {
+                        var1 = 31 * var1 + var2[var3];
+                        //var1 = (var1 << 5) - var1 +var2[var3];
+                    }
+
+                    System.out.println("this.hash = " + var1);
+                }
+
+                return var1;
+            }
+        ```
+        - ###### 常见hash算法
+            1. Object类的hashCode.返回对象的内存地址经过处理后的结构，由于每个对象的内存地址都不一样，所以哈希码也不一样。
+            2. String类的hashCode.根据String类包含的字符串的内容，根据一种特殊算法返回哈希码，只要字符串内容相同，返回的哈希码也相同。
+            3. Integer类，返回的哈希码就是Integer对象里所包含的那个整数的数值，
+            例如Integer i1=new Integer(100),i1.hashCode的值就是100 。由此可见，2个一样大小的Integer对象，返回的哈希码也一样。
+            - 哈希码要完成这么一件事，首先要保证如果equlas出来的结果相等，那么hashCode也相等。
+            - 一般的线性表，树中，记录在结构中的相对位置是随机的，即和记录的关键字之间不存在确定的关系，
+            因此，在结构中查找记录时需进行一系列和关键字的比较。这一类查找方法建立在“比较“的基础上，
+            查找的效率依赖于查找过程中所进行的比较次数。（链表最基础的比较，就是遍历比较，时间都花在了这个上）
+            - 理想的情况是能直接找到需要的记录，因此必须在记录的存储位置和它的关键字之间建立一个确定的对应关系f，
+            使每个关键字和结构中一个唯一的存储位置相对应。（通过单独识别码去找到该对象，建立联系）
+            4. 直接定址法：有一个从1到100岁的人口数字统计表，其中，年龄作为关键字，
+            哈希函数取关键字自身或者关键字的某个线性函数。取关键字自身效率不高,时间复杂度是O(1),空间复杂度是O(n),n是关键字的个数。
+            5. 数字分析法：重复的可能性大的不取，取的话造成冲突的机会增加，所以尽量不取可能重复的关键字。
+            6. 平方取中法： 取关键字平方后的中间几位为哈希地址。
+            {421，423，436}，平方之后的结果为{177241，178929，190096}，那么可以取{72，89，00}作为Hash地址。
+            7. 折叠法： 将关键字分割成位数相同的几部分（最后一部分的位数可以不同），
+            然后取这几部分的叠加和（舍去进位）作为哈希地址，这方法称为折叠法。
+            图书的ISBN号为8903-241-23，可以将address(key)=89+03+24+12+3作为Hash地址。
+            8. 除留余数法: 取关键字被某个不大于哈希表表长m的数p除后所得余数为哈希地址。H(key)=key MOD p (p<=m)
+            在这里p的选取非常关键，p选择的好的话，能够最大程度地减少冲突，p一般取不大于m的最大质数。
+            9. 随机数法: 选择一个随机函数，取关键字的随机函数值为它的哈希地址.
+            H(key)=random(key) ,其中random为随机函数。通常用于**关键字长度不等**时采用此法。
+            - 冲突：对不同的关键字可能得到同一哈希地址。
+            - ###### 处理冲突方法
+            - 开放定址法：当一个关键字和另一个关键字发生冲突时，使用某种探测技术在Hash表中形成一个探测序列，
+            然后沿着这个探测序列依次查找下去，当碰到一个空的单元时，则插入其中。Hi=(H(key)+di) MOD m i=1,2,...,k(k<=m-1)
+            比较常用的探测方法有**线性探测法**，比如有一组关键字{12，13，25，23，38，34，6，84，91}，
+            Hash表长为14，Hash函数为address(key)=key%11，当插入12，13，25时可以直接插入，
+            而当插入23时，地址1被占用了，因此沿着地址1依次往下探测(探测步长可以根据情况而定)，
+            直到探测到地址4，发现为空，则将23插入其中。（发现有，则顺延偏移）
+            **二次探测再散列**di取值可能为1,-1,2,-2,4,-4,9,-9,16,-16,...k*k,-k*k(k<=m/2).
+            **伪随机探测再散列**di取值可能为伪随机数列.
+            - 链地址法：采用数组和链表相结合的办法，将Hash地址相同的记录存储在一张线性表中，
+            而每张表的表头的序号即为计算得到的Hash地址。如上述例子中，采用链地址法形成的Hash表存储。
+            - 再哈希法: 当发生冲突时，使用第二个、第三个、哈希函数计算地址，直到无冲突时。缺点：计算时间增加。
+            - 建立一个公共溢出区:假设哈希函数的值域为[0,m-1],则设向量HashTable[0..m-1]为基本表，
+            另外设立存储空间向量OverTable[0..v]用以存储发生冲突的记录。
+        - Hash表大小的确定也非常关键，如果Hash表的空间远远大于最后实际存储的记录个数，
+        则造成了很大的空间浪费，如果选取小了的话，则容易造成冲突。
+        在实际情况中，一般需要根据最终记录存储个数和关键字的分布特点来确定Hash表的大小。
+        还有一种情况时可能事先不知道最终需要存储的记录个数，则需要动态维护Hash表的容量，
+        此时可能需要重新计算Hash地址。
+    3. 这里要注意区分三个概念：hashCode值、hash值、hash方法、数组下标
+        - hashCode值：是KV对中的K对象的hashCode方法的返回值（若没有重写则默认用Object类的hashCode方法的生成值）
+        Object类`public native int hashCode();`native关键字是系统相关的其他语言实现（C/C++）。
+        - hash值: 是在hashCode值的基础上又进行了一步运算后的结果，这个运算过程就是*hash方法*。
+        - 数组下标: 根据该hash值和数组长度计算出数组下标，计算公式：hash值  &（数组长度-1）= 下标。
+        - HashMap中*hash方法*：
+            ```java
+            static final int hash(Object var0) {
+                int var1;
+                return var0 == null ? 0 : (var1 = var0.hashCode()) ^ var1 >>> 16;
+            }
+            ```
+    4. toString()
+        - Object默认实现
+        ```java
+        public String toString() {
+            return this.getClass().getName() + "@" + Integer.toHexString(this.hashCode());
+        }
+        ```
+    5. clone()
+        1. cloneable
+        - clone() 是 Object 的 protected 方法，它不是 public，一个类不显式去重写 clone()，
+        其它类就不能直接去调用该类实例的 clone() 方法。
+        ```java
+        public class CloneExample {
+            private int a;
+            private int b;
+        }
+        CloneExample e1 = new CloneExample();
+        // CloneExample e2 = e1.clone(); // 'clone()' has protected access in 'java.lang.Object'
+        ```
+        重写 clone() 得到以下实现：
+        ```
+        public class CloneExample {
+            private int a;
+            private int b;
+
+            @Override
+            public CloneExample clone() throws CloneNotSupportedException {
+                return (CloneExample)super.clone();
+            }
+        }
+        ```
+        ```java
+        CloneExample e1 = new CloneExample();
+        try {
+            CloneExample e2 = e1.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+        ```
+        ```bash
+        java.lang.CloneNotSupportedException: CloneExample
+        ```
+        上抛出了 CloneNotSupportedException，这是因为 CloneExample 没有实现 Cloneable 接口。
+        - clone() 方法并不是 Cloneable 接口的方法，而是 Object 的一个 protected 方法。
+        Cloneable 接口只是规定，如果一个类没有实现 Cloneable 接口又调用了 clone() 方法，
+        就会抛出 CloneNotSupportedException。
+        ```java
+        public class CloneExample implements Cloneable {
+            private int a;
+            private int b;
+
+            @Override
+            public Object clone() throws CloneNotSupportedException {
+                return super.clone();
+            }
+        }
+        ```
+        2. 浅拷贝
+            - 拷贝对象和原始对象的引用类型引用同一个对象。
+        3. 深拷贝
+            - 拷贝对象和原始对象的引用类型引用不同对象。
+            ```java
+                @Override
+                protected DeepCloneExample clone() throws CloneNotSupportedException {
+                    DeepCloneExample result = (DeepCloneExample) super.clone();
+                    result.arr = new int[arr.length];
+                    for (int i = 0; i < arr.length; i++) {
+                        result.arr[i] = arr[i];
+                    }
+                    return result;
+                }
+            ```
+        4. clone() 的替代方案
+            - 使用 clone() 方法来拷贝一个对象即复杂又有风险，它会抛出异常，并且还需要类型转换。
+            Effective Java 书上讲到，最好不要去使用 clone()
+            - 可以使用拷贝构造函数
+            - 拷贝工厂来拷贝一个对象。
+6. 关键字
+    1. <a href="#final">final</a>
+    2. static
+        1. 静态变量：又称为类变量，也就是说这个变量属于类的，类所有的实例都共享静态变量，
+        可以直接通过类名来访问它。静态变量在内存中只存在一份。
+        - 实例变量：每创建一个实例就会产生一个实例变量，它与该实例同生共死。
+        2. 静态方法：
+        - 静态方法在类加载的时候就存在了，它不依赖于任何实例。
+        所以静态方法必须有实现，也就是说它**不能是抽象方法**。
+        - 只能访问所属类的静态字段和静态方法，方法中不能有 this 和 super 关键字。
+        3. 静态语句块：
+        - 静态语句块在类初始化时运行一次。
+        4. 静态内部类:
+        - 非静态内部类依赖于外部类的实例，而静态内部类不需要。
+        - 静态内部类不能访问外部类的非静态的变量和方法。
+        5. 静态导包:
+        - 在使用静态变量和方法时不用再指明 ClassName，从而简化代码，但可读性大大降低。
+        `import static com.xxx.ClassName.*`
+        6. 初始化顺序
+        - 静态变量和静态语句块优先于实例变量和普通语句块，静态变量和静态语句块的初始化顺序取决于它们在代码中的顺序。
+        - 存在继承的情况下，初始化顺序为：
+            1. 父类（静态变量、静态语句块）
+            1. 子类（静态变量、静态语句块）
+            1. 父类（实例变量、普通语句块）
+            1. 父类（构造函数）
+            1. 子类（实例变量、普通语句块）
+            1. 子类（构造函数）
+7. 反射
