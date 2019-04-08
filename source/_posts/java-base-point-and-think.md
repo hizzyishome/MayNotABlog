@@ -253,10 +253,11 @@ categories:
 |TIME_WAITING|超时等待状态，指定时间自行返回|
 |TERMINATED|终止线程，执行完毕|
 
-24. final
+24. <a name="final">final</a>
     1. 变量
         - 基本数据类型在初始化之后便不能更改
         - 引用类型初始化之后便不能再让其指向另一个对象
+        - 但是被引用的对象本身是可以修改的。
     2. 类
         - 类不能被继承。
         - final类中的所有成员方法都会被隐式地指定为final方法。
@@ -267,27 +268,28 @@ categories:
         （现在的Java版本已经不需要使用final方法进行这些优化了）。
         - 类中所有的private方法都隐式地指定为final。
 
-25. 异常
-    ```mermaid
-    graph TD;
-      Throwable-->Error;
-      Throwable-->Exception;
-      Error-->VirtulMachineError;
-      Error-->AWTError;
-      VirtulMachineError-->StackOverFlowError;
-      VirtulMachineError-->OutOfMemoryError;
-      Exception-->IOException;
-      Exception-->RuntimeException;
-      IOException-->EOFException;
-      IOException-->FileNotFoundException;
-      RuntimeException-->ArrithmeticException;
-      RuntimeException-->MissingResourceException;
-      RuntimeException-->ClassNotFoundException;
-      RuntimeException-->NullPointerException;
-      RuntimeException-->IllegalArgumentException;
-      RuntimeException-->ArrayIndexOutOfBoundsException;
-      RuntimeException-->UnknownTypeException;
-    ```
+25. <a name="Throwable">异常</a>
+
+        ```mermaid
+        graph TD;
+          Throwable-->Error;
+          Throwable-->Exception;
+          Error-->VirtulMachineError;
+          Error-->AWTError;
+          VirtulMachineError-->StackOverFlowError;
+          VirtulMachineError-->OutOfMemoryError;
+          Exception-->IOException;
+          Exception-->RuntimeException;
+          IOException-->EOFException;
+          IOException-->FileNotFoundException;
+          RuntimeException-->ArrithmeticException;
+          RuntimeException-->MissingResourceException;
+          RuntimeException-->ClassNotFoundException;
+          RuntimeException-->NullPointerException;
+          RuntimeException-->IllegalArgumentException;
+          RuntimeException-->ArrayIndexOutOfBoundsException;
+          RuntimeException-->UnknownTypeException;
+        ```
     1. Error（错误）
         - 程序无法处理的错误，表示运行应用程序中较严重问题。
         - 大多数错误与代码编写者执行的操作无关，而表示代码运行时 JVM（Java 虚拟机）出现的问题。
@@ -305,6 +307,8 @@ categories:
         NullPointerException（要访问的变量没有引用任何对象时，抛出该异常）,
         ArithmeticException（算术运算异常，一个整数除以0时，抛出该异常）,
         ArrayIndexOutOfBoundsException （下标越界异常）。
+        - 受检异常 ：需要用 try...catch... 语句捕获并进行处理，并且可以从异常中恢复；
+        - 非受检异常 ：是程序运行时错误，例如除 0 会引发 Arithmetic Exception，此时程序崩溃并且无法恢复。
 
     **异常能被程序本身可以处理，错误无法处理。**
 
@@ -333,6 +337,31 @@ categories:
         2. 执行jsr指令跳到finally语句里执行；
         3. 执行完finally语句后，返回之前保存在局部变量表里的值。
         4. 如果try，finally语句里均有return，忽略try的return，而使用finally的return.
+    5. 应该尽量将捕获底层异常类(子类准确类)的catch子句放在前面，同时尽量将捕获相对高层的异常类(父类异常类)的catch子句放在后面。
+    否则，捕获底层异常类的catch子句将可能会被屏蔽。（你想啊，你吧Exception放在第一个catch，后面你的ShitException就被短路了）
+    6. try语句的嵌套可以很隐蔽的发生。例如，我们可以将对方法的调用放在一个try块中。
+    在该方法的内部，有另一个try语句。在这种情况下，方法内部的try仍然是嵌套在外部调用该方法的try块中的。
+    7. 程序执行完throw语句之后立即停止；throw后面的任何语句不被执行，
+    最邻近的try块用来检查它是否含有一个与异常类型匹配的catch语句。
+    如果发现了匹配的块，控制转向该语句；如果没有发现，次包围的try块来检查，以此类推。
+    如果没有发现匹配的catch块，默认异常处理程序中断程序的执行并且打印堆栈轨迹。
+    8. Throws 仅当抛出了异常，该方法的调用者才必须处理或者重新抛出该异常。
+    当方法的调用者无力处理该异常的时候，应该继续抛出，而不是囫囵吞枣。
+    9. finally创建的代码块在try/catch块完成之后另一个try/catch出现之前执行。
+    finally块无论有没有异常抛出都会执行。如果抛出异常，即使没有catch子句匹配，finally也会执行。
+    一个方法将从一个try/catch块返回到调用程序的任何时候，经过一个未捕获的异常或者是一个明确的返回语句，
+    finally子句在方法返回之前仍将执行。这在关闭文件句柄和释放任何在方法开始时被分配的其他资源是很有用。
+    10. 异常链顾名思义就是将异常发生的原因一个传一个串起来，即把底层的异常信息传给上层，这样逐层抛出。
+    当程序捕获到了一个底层异常，在处理部分选择了继续抛出一个更高级别的新异常给此方法的调用者。
+    这样异常的原因就会逐层传递。这样，位于高层的异常递归调用getCause()方法，就可以遍历各层的异常原因。
+    这就是Java异常链的原理。异常链的实际应用很少，发生异常时候逐层上抛不是个好注意，
+    上层拿到这些异常又能奈之何？而且异常逐层上抛会消耗大量资源， 因为要保存一个完整的异常链信息.
+    11. 用户自定义异常类，只需继承Exception类即可。
+        - 创建自定义异常类。
+        - 在方法中通过throw关键字抛出异常对象。
+        - 如果在当前抛出异常的方法中处理异常，可以使用try-catch语句捕获并处理；
+        否则在方法的声明处通过throws关键字指明要抛出给方法调用者的异常，继续进行下一步操作。
+        - 在出现异常方法的调用者中捕获并处理异常。
 
 26. transient
     - 阻止实例中那些用此关键字修饰的的变量序列化；
@@ -664,3 +693,229 @@ categories:
         然后组成一个 R 进制的整数。R 一般取 31，因为它是一个奇素数，如果是偶数的话，
         当出现乘法溢出，信息就会丢失，因为与 2 相乘相当于向左移一位。
         - 一个数与 31 相乘可以转换成移位和减法：`31*x == (x<<5)-x`，编译器会自动进行这个优化。
+        ```java
+        public int hashCode(char[] chars) {
+                int var1 = 0;
+                if (var1 == 0 && chars.length > 0) {
+                    char[] var2 = chars;
+
+                    for(int var3 = 0; var3 < chars.length; ++var3) {
+                        var1 = 31 * var1 + var2[var3];
+                        //var1 = (var1 << 5) - var1 +var2[var3];
+                    }
+
+                    System.out.println("this.hash = " + var1);
+                }
+
+                return var1;
+            }
+        ```
+        - ###### 常见hash算法
+            1. Object类的hashCode.返回对象的内存地址经过处理后的结构，由于每个对象的内存地址都不一样，所以哈希码也不一样。
+            2. String类的hashCode.根据String类包含的字符串的内容，根据一种特殊算法返回哈希码，只要字符串内容相同，返回的哈希码也相同。
+            3. Integer类，返回的哈希码就是Integer对象里所包含的那个整数的数值，
+            例如Integer i1=new Integer(100),i1.hashCode的值就是100 。由此可见，2个一样大小的Integer对象，返回的哈希码也一样。
+            - 哈希码要完成这么一件事，首先要保证如果equlas出来的结果相等，那么hashCode也相等。
+            - 一般的线性表，树中，记录在结构中的相对位置是随机的，即和记录的关键字之间不存在确定的关系，
+            因此，在结构中查找记录时需进行一系列和关键字的比较。这一类查找方法建立在“比较“的基础上，
+            查找的效率依赖于查找过程中所进行的比较次数。（链表最基础的比较，就是遍历比较，时间都花在了这个上）
+            - 理想的情况是能直接找到需要的记录，因此必须在记录的存储位置和它的关键字之间建立一个确定的对应关系f，
+            使每个关键字和结构中一个唯一的存储位置相对应。（通过单独识别码去找到该对象，建立联系）
+            4. 直接定址法：有一个从1到100岁的人口数字统计表，其中，年龄作为关键字，
+            哈希函数取关键字自身或者关键字的某个线性函数。取关键字自身效率不高,时间复杂度是O(1),空间复杂度是O(n),n是关键字的个数。
+            5. 数字分析法：重复的可能性大的不取，取的话造成冲突的机会增加，所以尽量不取可能重复的关键字。
+            6. 平方取中法： 取关键字平方后的中间几位为哈希地址。
+            {421，423，436}，平方之后的结果为{177241，178929，190096}，那么可以取{72，89，00}作为Hash地址。
+            7. 折叠法： 将关键字分割成位数相同的几部分（最后一部分的位数可以不同），
+            然后取这几部分的叠加和（舍去进位）作为哈希地址，这方法称为折叠法。
+            图书的ISBN号为8903-241-23，可以将address(key)=89+03+24+12+3作为Hash地址。
+            8. 除留余数法: 取关键字被某个不大于哈希表表长m的数p除后所得余数为哈希地址。H(key)=key MOD p (p<=m)
+            在这里p的选取非常关键，p选择的好的话，能够最大程度地减少冲突，p一般取不大于m的最大质数。
+            9. 随机数法: 选择一个随机函数，取关键字的随机函数值为它的哈希地址.
+            H(key)=random(key) ,其中random为随机函数。通常用于**关键字长度不等**时采用此法。
+            - 冲突：对不同的关键字可能得到同一哈希地址。
+            - ###### 处理冲突方法
+            - 开放定址法：当一个关键字和另一个关键字发生冲突时，使用某种探测技术在Hash表中形成一个探测序列，
+            然后沿着这个探测序列依次查找下去，当碰到一个空的单元时，则插入其中。Hi=(H(key)+di) MOD m i=1,2,...,k(k<=m-1)
+            比较常用的探测方法有**线性探测法**，比如有一组关键字{12，13，25，23，38，34，6，84，91}，
+            Hash表长为14，Hash函数为address(key)=key%11，当插入12，13，25时可以直接插入，
+            而当插入23时，地址1被占用了，因此沿着地址1依次往下探测(探测步长可以根据情况而定)，
+            直到探测到地址4，发现为空，则将23插入其中。（发现有，则顺延偏移）
+            **二次探测再散列**di取值可能为1,-1,2,-2,4,-4,9,-9,16,-16,...k*k,-k*k(k<=m/2).
+            **伪随机探测再散列**di取值可能为伪随机数列.
+            - 链地址法：采用数组和链表相结合的办法，将Hash地址相同的记录存储在一张线性表中，
+            而每张表的表头的序号即为计算得到的Hash地址。如上述例子中，采用链地址法形成的Hash表存储。
+            - 再哈希法: 当发生冲突时，使用第二个、第三个、哈希函数计算地址，直到无冲突时。缺点：计算时间增加。
+            - 建立一个公共溢出区:假设哈希函数的值域为[0,m-1],则设向量HashTable[0..m-1]为基本表，
+            另外设立存储空间向量OverTable[0..v]用以存储发生冲突的记录。
+        - Hash表大小的确定也非常关键，如果Hash表的空间远远大于最后实际存储的记录个数，
+        则造成了很大的空间浪费，如果选取小了的话，则容易造成冲突。
+        在实际情况中，一般需要根据最终记录存储个数和关键字的分布特点来确定Hash表的大小。
+        还有一种情况时可能事先不知道最终需要存储的记录个数，则需要动态维护Hash表的容量，
+        此时可能需要重新计算Hash地址。
+    3. 这里要注意区分三个概念：hashCode值、hash值、hash方法、数组下标
+        - hashCode值：是KV对中的K对象的hashCode方法的返回值（若没有重写则默认用Object类的hashCode方法的生成值）
+        Object类`public native int hashCode();`native关键字是系统相关的其他语言实现（C/C++）。
+        - hash值: 是在hashCode值的基础上又进行了一步运算后的结果，这个运算过程就是*hash方法*。
+        - 数组下标: 根据该hash值和数组长度计算出数组下标，计算公式：hash值  &（数组长度-1）= 下标。
+        - HashMap中*hash方法*：
+            ```java
+            static final int hash(Object var0) {
+                int var1;
+                return var0 == null ? 0 : (var1 = var0.hashCode()) ^ var1 >>> 16;
+            }
+            ```
+    4. toString()
+        - Object默认实现
+        ```java
+        public String toString() {
+            return this.getClass().getName() + "@" + Integer.toHexString(this.hashCode());
+        }
+        ```
+    5. clone()
+        1. cloneable
+        - clone() 是 Object 的 protected 方法，它不是 public，一个类不显式去重写 clone()，
+        其它类就不能直接去调用该类实例的 clone() 方法。
+        ```java
+        public class CloneExample {
+            private int a;
+            private int b;
+        }
+        CloneExample e1 = new CloneExample();
+        // CloneExample e2 = e1.clone(); // 'clone()' has protected access in 'java.lang.Object'
+        ```
+        重写 clone() 得到以下实现：
+        ```
+        public class CloneExample {
+            private int a;
+            private int b;
+
+            @Override
+            public CloneExample clone() throws CloneNotSupportedException {
+                return (CloneExample)super.clone();
+            }
+        }
+        ```
+        ```java
+        CloneExample e1 = new CloneExample();
+        try {
+            CloneExample e2 = e1.clone();
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+        ```
+        ```bash
+        java.lang.CloneNotSupportedException: CloneExample
+        ```
+        上抛出了 CloneNotSupportedException，这是因为 CloneExample 没有实现 Cloneable 接口。
+        - clone() 方法并不是 Cloneable 接口的方法，而是 Object 的一个 protected 方法。
+        Cloneable 接口只是规定，如果一个类没有实现 Cloneable 接口又调用了 clone() 方法，
+        就会抛出 CloneNotSupportedException。
+        ```java
+        public class CloneExample implements Cloneable {
+            private int a;
+            private int b;
+
+            @Override
+            public Object clone() throws CloneNotSupportedException {
+                return super.clone();
+            }
+        }
+        ```
+        2. 浅拷贝
+            - 拷贝对象和原始对象的引用类型引用同一个对象。
+        3. 深拷贝
+            - 拷贝对象和原始对象的引用类型引用不同对象。
+            ```java
+                @Override
+                protected DeepCloneExample clone() throws CloneNotSupportedException {
+                    DeepCloneExample result = (DeepCloneExample) super.clone();
+                    result.arr = new int[arr.length];
+                    for (int i = 0; i < arr.length; i++) {
+                        result.arr[i] = arr[i];
+                    }
+                    return result;
+                }
+            ```
+        4. clone() 的替代方案
+            - 使用 clone() 方法来拷贝一个对象即复杂又有风险，它会抛出异常，并且还需要类型转换。
+            Effective Java 书上讲到，最好不要去使用 clone()
+            - 可以使用拷贝构造函数
+            - 拷贝工厂来拷贝一个对象。
+6. 关键字
+    1. <a href="#final">final</a>
+    2. static
+        1. 静态变量：又称为类变量，也就是说这个变量属于类的，类所有的实例都共享静态变量，
+        可以直接通过类名来访问它。静态变量在内存中只存在一份。
+        - 实例变量：每创建一个实例就会产生一个实例变量，它与该实例同生共死。
+        2. 静态方法：
+        - 静态方法在类加载的时候就存在了，它不依赖于任何实例。
+        所以静态方法必须有实现，也就是说它**不能是抽象方法**。
+        - 只能访问所属类的静态字段和静态方法，方法中不能有 this 和 super 关键字。
+        3. 静态语句块：
+        - 静态语句块在类初始化时运行一次。
+        4. 静态内部类:
+        - 非静态内部类依赖于外部类的实例，而静态内部类不需要。
+        - 静态内部类不能访问外部类的非静态的变量和方法。
+        5. 静态导包:
+        - 在使用静态变量和方法时不用再指明 ClassName，从而简化代码，但可读性大大降低。
+        `import static com.xxx.ClassName.*`
+        6. 初始化顺序
+        - 静态变量和静态语句块优先于实例变量和普通语句块，静态变量和静态语句块的初始化顺序取决于它们在代码中的顺序。
+        - 存在继承的情况下，初始化顺序为：
+            1. 父类（静态变量、静态语句块）
+            1. 子类（静态变量、静态语句块）
+            1. 父类（实例变量、普通语句块）
+            1. 父类（构造函数）
+            1. 子类（实例变量、普通语句块）
+            1. 子类（构造函数）
+7. 反射
+    - 每个类都有一个 Class 对象，包含了与类有关的信息。当编译一个新类时，
+    会产生一个同名的 .class 文件，该文件内容保存着 Class 对象。
+    - 类加载相当于 Class 对象的加载，类在第一次使用时才动态加载到 JVM 中。
+    也可以使用 Class.forName("com.mysql.jdbc.Driver") 这种方式来控制类的加载，
+    该方法会返回一个 Class 对象。
+    - 反射可以提供运行时的类信息，并且这个类可以在运行时才加载进来，甚至在编译时期该类的 .class 不存在也可以加载进来。
+    - Class 和 java.lang.reflect 一起对反射提供了支持，java.lang.reflect 类库主要包含了以下三个类：
+        1. Field: 可以使用 get() 和 set() 方法读取和修改 Field 对象关联的字段；
+        2. Method: 可以使用 invoke() 方法调用与 Method 对象关联的方法；
+        3. Constructor: 可以用 Constructor 创建新的对象。
+    - 反射的优点:
+        1. 可扩展性: 用程序可以利用全限定名创建可扩展对象的实例，来使用来自外部的用户自定义类。
+        2. 类浏览器和可视化开发环境: 一个类浏览器需要可以枚举类的成员。
+        可视化开发环境（如 IDE）可以从利用反射中可用的类型信息中受益，以帮助程序员编写正确的代码。
+        3. 调试器和测试工具: 调试器需要能够检查一个类里的私有成员。
+        测试工具可以利用反射来自动地调用类里定义的可被发现的 API 定义，以确保一组测试中有较高的代码覆盖率。
+
+    - 反射的缺点:
+        1. 性能开销 ：反射涉及了动态类型的解析，所以 JVM 无法对这些代码进行优化。
+        因此，反射操作的效率要比那些非反射操作低得多。
+        我们应该避免在经常被执行的代码或对性能要求很高的程序中使用反射。
+        2. 安全限制 ：使用反射技术要求程序必须在一个没有安全限制的环境中运行。
+        如果一个程序必须在有安全限制的环境中运行，如 Applet，那么这就是个问题了。
+        3. 内部暴露 ：由于反射允许代码执行一些在正常情况下不被允许的操作（比如访问私有的属性和方法），
+        所以使用反射可能会导致意料之外的副作用，这可能导致代码功能失调并破坏可移植性。
+        反射代码破坏了抽象性，因此当平台发生改变的时候，代码的行为就有可能也随着变化。
+
+8. <a href="#Throwable">异常</a>
+9. 泛型
+    ```java
+    public class Box<T> {
+        // T stands for "Type"
+        private T t;
+        public void set(T t) { this.t = t; }
+        public T get() { return t; }
+    }
+    ```
+    1. 泛型类
+    ```java
+
+    ```
+    2. 泛型方法
+        ```java
+
+        ```
+    3. 边界符
+        ```java
+
+        ```
