@@ -268,27 +268,28 @@ categories:
         （现在的Java版本已经不需要使用final方法进行这些优化了）。
         - 类中所有的private方法都隐式地指定为final。
 
-25. 异常
-    ```mermaid
-    graph TD;
-      Throwable-->Error;
-      Throwable-->Exception;
-      Error-->VirtulMachineError;
-      Error-->AWTError;
-      VirtulMachineError-->StackOverFlowError;
-      VirtulMachineError-->OutOfMemoryError;
-      Exception-->IOException;
-      Exception-->RuntimeException;
-      IOException-->EOFException;
-      IOException-->FileNotFoundException;
-      RuntimeException-->ArrithmeticException;
-      RuntimeException-->MissingResourceException;
-      RuntimeException-->ClassNotFoundException;
-      RuntimeException-->NullPointerException;
-      RuntimeException-->IllegalArgumentException;
-      RuntimeException-->ArrayIndexOutOfBoundsException;
-      RuntimeException-->UnknownTypeException;
-    ```
+25. <a name="Throwable">异常</a>
+
+        ```mermaid
+        graph TD;
+          Throwable-->Error;
+          Throwable-->Exception;
+          Error-->VirtulMachineError;
+          Error-->AWTError;
+          VirtulMachineError-->StackOverFlowError;
+          VirtulMachineError-->OutOfMemoryError;
+          Exception-->IOException;
+          Exception-->RuntimeException;
+          IOException-->EOFException;
+          IOException-->FileNotFoundException;
+          RuntimeException-->ArrithmeticException;
+          RuntimeException-->MissingResourceException;
+          RuntimeException-->ClassNotFoundException;
+          RuntimeException-->NullPointerException;
+          RuntimeException-->IllegalArgumentException;
+          RuntimeException-->ArrayIndexOutOfBoundsException;
+          RuntimeException-->UnknownTypeException;
+        ```
     1. Error（错误）
         - 程序无法处理的错误，表示运行应用程序中较严重问题。
         - 大多数错误与代码编写者执行的操作无关，而表示代码运行时 JVM（Java 虚拟机）出现的问题。
@@ -306,6 +307,8 @@ categories:
         NullPointerException（要访问的变量没有引用任何对象时，抛出该异常）,
         ArithmeticException（算术运算异常，一个整数除以0时，抛出该异常）,
         ArrayIndexOutOfBoundsException （下标越界异常）。
+        - 受检异常 ：需要用 try...catch... 语句捕获并进行处理，并且可以从异常中恢复；
+        - 非受检异常 ：是程序运行时错误，例如除 0 会引发 Arithmetic Exception，此时程序崩溃并且无法恢复。
 
     **异常能被程序本身可以处理，错误无法处理。**
 
@@ -334,6 +337,31 @@ categories:
         2. 执行jsr指令跳到finally语句里执行；
         3. 执行完finally语句后，返回之前保存在局部变量表里的值。
         4. 如果try，finally语句里均有return，忽略try的return，而使用finally的return.
+    5. 应该尽量将捕获底层异常类(子类准确类)的catch子句放在前面，同时尽量将捕获相对高层的异常类(父类异常类)的catch子句放在后面。
+    否则，捕获底层异常类的catch子句将可能会被屏蔽。（你想啊，你吧Exception放在第一个catch，后面你的ShitException就被短路了）
+    6. try语句的嵌套可以很隐蔽的发生。例如，我们可以将对方法的调用放在一个try块中。
+    在该方法的内部，有另一个try语句。在这种情况下，方法内部的try仍然是嵌套在外部调用该方法的try块中的。
+    7. 程序执行完throw语句之后立即停止；throw后面的任何语句不被执行，
+    最邻近的try块用来检查它是否含有一个与异常类型匹配的catch语句。
+    如果发现了匹配的块，控制转向该语句；如果没有发现，次包围的try块来检查，以此类推。
+    如果没有发现匹配的catch块，默认异常处理程序中断程序的执行并且打印堆栈轨迹。
+    8. Throws 仅当抛出了异常，该方法的调用者才必须处理或者重新抛出该异常。
+    当方法的调用者无力处理该异常的时候，应该继续抛出，而不是囫囵吞枣。
+    9. finally创建的代码块在try/catch块完成之后另一个try/catch出现之前执行。
+    finally块无论有没有异常抛出都会执行。如果抛出异常，即使没有catch子句匹配，finally也会执行。
+    一个方法将从一个try/catch块返回到调用程序的任何时候，经过一个未捕获的异常或者是一个明确的返回语句，
+    finally子句在方法返回之前仍将执行。这在关闭文件句柄和释放任何在方法开始时被分配的其他资源是很有用。
+    10. 异常链顾名思义就是将异常发生的原因一个传一个串起来，即把底层的异常信息传给上层，这样逐层抛出。
+    当程序捕获到了一个底层异常，在处理部分选择了继续抛出一个更高级别的新异常给此方法的调用者。
+    这样异常的原因就会逐层传递。这样，位于高层的异常递归调用getCause()方法，就可以遍历各层的异常原因。
+    这就是Java异常链的原理。异常链的实际应用很少，发生异常时候逐层上抛不是个好注意，
+    上层拿到这些异常又能奈之何？而且异常逐层上抛会消耗大量资源， 因为要保存一个完整的异常链信息.
+    11. 用户自定义异常类，只需继承Exception类即可。
+        - 创建自定义异常类。
+        - 在方法中通过throw关键字抛出异常对象。
+        - 如果在当前抛出异常的方法中处理异常，可以使用try-catch语句捕获并处理；
+        否则在方法的声明处通过throws关键字指明要抛出给方法调用者的异常，继续进行下一步操作。
+        - 在出现异常方法的调用者中捕获并处理异常。
 
 26. transient
     - 阻止实例中那些用此关键字修饰的的变量序列化；
@@ -856,5 +884,38 @@ categories:
         1. 可扩展性: 用程序可以利用全限定名创建可扩展对象的实例，来使用来自外部的用户自定义类。
         2. 类浏览器和可视化开发环境: 一个类浏览器需要可以枚举类的成员。
         可视化开发环境（如 IDE）可以从利用反射中可用的类型信息中受益，以帮助程序员编写正确的代码。
-        3. 调试器和测试工具: 调试器需要能够检查一个类里的私有成员。测试工具可以利用反射来自动地调用类里定义的可被发现的 API 定义，以确保一组测试中有较高的代码覆盖率。
+        3. 调试器和测试工具: 调试器需要能够检查一个类里的私有成员。
+        测试工具可以利用反射来自动地调用类里定义的可被发现的 API 定义，以确保一组测试中有较高的代码覆盖率。
 
+    - 反射的缺点:
+        1. 性能开销 ：反射涉及了动态类型的解析，所以 JVM 无法对这些代码进行优化。
+        因此，反射操作的效率要比那些非反射操作低得多。
+        我们应该避免在经常被执行的代码或对性能要求很高的程序中使用反射。
+        2. 安全限制 ：使用反射技术要求程序必须在一个没有安全限制的环境中运行。
+        如果一个程序必须在有安全限制的环境中运行，如 Applet，那么这就是个问题了。
+        3. 内部暴露 ：由于反射允许代码执行一些在正常情况下不被允许的操作（比如访问私有的属性和方法），
+        所以使用反射可能会导致意料之外的副作用，这可能导致代码功能失调并破坏可移植性。
+        反射代码破坏了抽象性，因此当平台发生改变的时候，代码的行为就有可能也随着变化。
+
+8. <a href="#Throwable">异常</a>
+9. 泛型
+    ```java
+    public class Box<T> {
+        // T stands for "Type"
+        private T t;
+        public void set(T t) { this.t = t; }
+        public T get() { return t; }
+    }
+    ```
+    1. 泛型类
+    ```java
+
+    ```
+    2. 泛型方法
+        ```java
+
+        ```
+    3. 边界符
+        ```java
+
+        ```
