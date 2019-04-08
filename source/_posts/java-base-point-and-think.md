@@ -909,13 +909,107 @@ categories:
     ```
     1. 泛型类
     ```java
-
+    Box<Integer> integerBox = new Box<Integer>();
+    Box<Double> doubleBox = new Box<Double>();
+    Box<String> stringBox = new Box<String>();
     ```
     2. 泛型方法
         ```java
-
+        public class Util {
+            public static <K, V> boolean compare(Pair<K, V> p1, Pair<K, V> p2) {
+                return p1.getKey().equals(p2.getKey()) &&
+                       p1.getValue().equals(p2.getValue());
+            }
+        }
+        public class Pair<K, V> {
+            private K key;
+            private V value;
+            public Pair(K key, V value) {
+                this.key = key;
+                this.value = value;
+            }
+            public void setKey(K key) { this.key = key; }
+            public void setValue(V value) { this.value = value; }
+            public K getKey()   { return key; }
+            public V getValue() { return value; }
+        }
+        
+        Pair<Integer, String> p1 = new Pair<>(1, "apple");
+        Pair<Integer, String> p2 = new Pair<>(2, "pear");
+        boolean same = Util.<Integer, String>compare(p1, p2);
         ```
     3. 边界符
         ```java
-
+        public static <T> int countGreaterThan(T[] anArray, T elem) {
+            int count = 0;
+            for (T e : anArray)
+                if (e > elem)  // compiler error 因为除了short, int, double, long, float, byte, char等原始类型，其他的类并不一定能使用操作符>
+                    ++count;
+            return count;
+        }
+ 
+        public interface Comparable<T> {
+            public int compareTo(T o);
+        }
+ 
+        // 告诉编译器它们都至少实现了compareTo方法
+        public static <T extends Comparable<T>> int countGreaterThan(T[] anArray, T elem) {
+            int count = 0;
+            for (T e : anArray)
+                if (e.compareTo(elem) > 0)
+                    ++count;
+            return count;
+        }
         ```
+    4. 通配符
+        ```java
+        public void boxTest(Box<Number> n) { /* ... */ }
+        ```
+        虽然Integer和Double是Number的子类，但是在泛型中Box<Integer>或者Box<Double>与Box<Number>之间并没有任何的关系
+        
+        ```java
+        class Fruit {}
+        class Apple extends Fruit {}
+        class Orange extends Fruit {}
+        ```
+        我们创建了一个泛型类Reader，然后在f1()中当我们尝试Fruit f = fruitReader.readExact(apples);
+        编译器会报错，因为List<Fruit>与List<Apple>之间并没有任何的关系。
+        
+        ```java
+        public class GenericReading {
+            static List<Apple> apples = Arrays.asList(new Apple());
+            static List<Fruit> fruit = Arrays.asList(new Fruit());
+            static class Reader<T> {
+                T readExact(List<T> list) {
+                    return list.get(0);
+                }
+            }
+            static void f1() {
+                Reader<Fruit> fruitReader = new Reader<Fruit>();
+                // Errors: List<Fruit> cannot be applied to List<Apple>.
+                // Fruit f = fruitReader.readExact(apples);
+            }
+            public static void main(String[] args) {
+                f1();
+            }
+        }
+        ```
+        按照我们通常的思维习惯，Apple和Fruit之间肯定是存在联系，
+        然而编译器却无法识别，那怎么在泛型代码中解决这个问题呢？我们可以通过使用通配符来解决这个问题：
+        ```java
+        static class CovariantReader<T> {
+            T readCovariant(List<? extends T> list) {
+                return list.get(0);
+            }
+        }
+        static void f2() {
+            CovariantReader<Fruit> fruitReader = new CovariantReader<Fruit>();
+            Fruit f = fruitReader.readCovariant(fruit);
+            Fruit a = fruitReader.readCovariant(apples);
+        }
+        public static void main(String[] args) {
+            f2();
+        }
+        ```
+        这样就相当与告诉编译器，fruitReader的readCovariant方法接受的参数只要是满足Fruit的子类就行(包括Fruit自身)，
+        这样子类和父类之间的关系也就关联上了。
