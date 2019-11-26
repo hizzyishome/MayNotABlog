@@ -52,4 +52,27 @@ categories: java
 
 最终，开发者反对代码中出现大量的已经变成许多错误源头的catch代码块。
 
-### 可检查异常与函数式编程不兼容
+###  
+
+然后我们迎来了Java 8，它提供了新的函数式编程特性，比如lambdas表达式、Streams流和组合函数。
+
+这些特性建立在泛型的基础上，参数和返回类型被泛型化，因此迭代操作和流操作(forEach、map、flatMap)可以通过共同的操作实现，而不用管对象类型时什么。
+
+但是，与数据类型不同，声明的异常不能泛型化。
+
+在Java中不能提供一个用lambda声明某个可检查的异常流操作(例如stream .map)，并显式的将该可检查异常传递给上下文代码。
+
+对可检查异常来所最重要的一点在于，所有介于一个throw和接收catch中间的代码块被强制要求声明异常。
+
+这个问题通过将可检查异常“包装”在RuntimeException运行时异常中解决，隐藏了异常的原始类型，通过对具体的异常“catch”代码块渲染包装来应对原生的异常概念，
+使之失效。
+
+Finally we can capture Java’s new philosophy in a nutshell, by noting that none of the new “functional interfaces” 
+in Java 8 declare checked exceptions.
+最后，通过注意到Java 8中没有一个新的函数式接口（“functional interfaces”）声明可检查异常这个特点，我们可以简单的抓住Java新哲学的核心
+（新核心是什么？简洁简洁简洁！java设计者终于意识到这个问题了。避免可检查异常引出的大段catch无用代码。）
+
+### 结论
+
+
+
