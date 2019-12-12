@@ -33,10 +33,11 @@ categories:
      PROPAFGATION_REQUIRED|0|默认，有事务就用当前事务，没有就创建
      PROPAFGATION_SUPPORTS|1|事务可有可无，不是必须的
      PROPAFGATION_MANDARTORY|2|当前必须要有事务，没有就报错
-     PROPAFGATION_REQUIRES_NEW|3|无论是否有事务，都起新事务,之前的挂起
+     PROPAFGATION_REQUIRES_NEW|3|无论是否有事务，都起新事务,之前的挂起.事务之间没有关联。事务之前结果不相互影响
      PROPAFGATION_NOT_SUPPORTED|4|不支持事务，按照非事务方式运行
      PROPAFGATION_NEVER|5|不支持事务，有事务就抛异常
-     PROPAFGATION_NESTED|6|内嵌事务，如果有事务，在当前事务中再起一个事务，但是内嵌事务的结果（是否回滚）不影响外部事务的执行
+     PROPAFGATION_NESTED|6|内嵌事务，如果有事务，在当前事务中再起一个事务。
+     内嵌事务的结果（是否回滚），影响外部事务的执行。外部回滚，内部也回滚。内部抛异常，回滚了，外部不受影响。 
         
     2. 事务的隔离性  
     
@@ -87,3 +88,9 @@ categories:
         最简单是，把自己的实例注入进来，内部直接调用改成，用自己的实例
         调用，因为自己的实例spring帮你创建了一个代理类，我们直接调用就行。也可以通过
         AopContext.currentProxy()获取当前类的代理对象，再调用子方法，其实是增强后的的方法
+### 总结
+    ##### spring声明式事务本质上是通过AOP来增强类的功能
+        - before after
+        - AOP创建动态代理
+    ##### REQUEST——NEW
+    
