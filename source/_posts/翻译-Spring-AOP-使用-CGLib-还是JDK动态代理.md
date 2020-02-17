@@ -1,5 +1,5 @@
 ---
-title: [翻译]Spring AOP 使用 CGLib 还是JDK动态代理
+title: '[翻译]Spring AOP 使用 CGLib 还是JDK动态代理'
 comments: true
 date: 2020-02-12 22:34:44
 updated: 2020-02-12 22:34:44
