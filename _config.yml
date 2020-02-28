@@ -85,3 +85,9 @@ deploy:
   type: git
   repo: git@github.com:hizzyishome/hizzyishome.github.io.git
   branch: master
+
+mermaid: ## mermaid url https://github.com/knsv/mermaid
+  enable: true
+  version: "8.4.8"
+  options:  # find more api options from https://github.com/knsv/mermaid/blob/master/src/mermaidAPI.js
+  #startOnload: true  // default true
