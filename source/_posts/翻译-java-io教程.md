@@ -245,6 +245,315 @@ Both file and directory information is available via the File class.
             }
         }
     ```
+    
+## Java IO: Byte 和 Char数组
+
+    - 在程序内部，字节和字符数组经常用来临时缓存数据，自然可以统统读进内存数组，然后通过下标访问。
+    但是如果你想从InputStream中Reader读取某一部分如何处理。
+
+### 通过InputStream或者Reader读取数组
+
+    - 从数组中读取数据，要通过ByteArrayInputStream或者CharArrayReader包装的字节或者字符。这样array中的字节或字符数据就能被读取到了。
+    - CharArrayReader也一样，换个关键字
+     ``` java
+     byte[] bytes = new byte[1024];
+     
+     //write data into byte array...
+     
+     InputStream input = new ByteArrayInputStream(bytes);
+     
+     //read first byte
+     int data = input.read();
+     while(data != -1) {
+         //do something with data
+     
+         //read next byte
+         data = input.read();
+     }
+     ```
+     
+### 通过OutputStream或者Writer写入数组
+    - ByteArrayOutputStream或者CharArrayWriter创建，往里面写入数据
+    - 写完了之后调用toByteArray()或者toCharArray()
+    - CharArrayWriter也一样
+     ``` java
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        
+        output.write("This text is converted to bytes".getBytes("UTF-8"));
+        
+        byte[] bytes = output.toByteArray();
+     ```
+     
+## Java中的 System.in, System.out, 和 System.error
+
+    - Java中三种经常用于提供输入输出的三种流
+    - System.out输出在控制台
+    - 这三个在虚拟机启动时由系统初始化，所以你不必初始化他们（尽管你可以在运行时交换他们）
+
+### System.in
+    - 是从控制台读入键盘输入数据的输入流
+    - 只能通过控制台或者终端读入与其相关的java程序
+    - 不常用，数据经常通过java 运行命令行参数，文件或者网络连接，或者GUI中的输入。
+    
+### System.out
+    - 是一个通过字节写出到控制台或者终端的PrintStream
+    - debug用用啥的
+### System.err
+    - 和out一个狗样，只是文本区别
+    - 编译器可能给标个红字意思意思
+### 示例
+    ``` java
+    try {
+      InputStream input = new FileInputStream("c:\\data\\...");
+      System.out.println("File opened...");
+    
+    } catch (IOException e){
+      System.err.println("File opening failed:");
+      e.printStackTrace();
+    }
+    ``` 
+    
+### 交换System流
+    - 虽然都是 java.lang.System类的静态成员，在jvm启动时就提前实例化了。但是他还是能手动更换。
+    ``` java
+    OutputStream output = new FileOutputStream("c:\\data\\system.out.txt");
+    PrintStream printOut = new PrintStream(output);
+    
+    System.setOut(printOut);
+    ```
+    - 这样所写入System.out的数据都被重定向到system.out.txt文件中
+    - 记住，这样做你要保证在jvm关闭前，flush System.out流，并且关闭文件。以保证所有数据输入到文件中。
+    
+## Java IO: 流
+    - java io流是你可以读取或者写入的数据流。通常和数据源目标数据相关，比如文件，网络连接等。
+    - 流中没有array的索引概念。在流中，你既不可以像在数组中前后移动游标，也不能像在文件操作中使用 RandomAccessFile去随意访问数据。
+    流就是一个连续的数据流。
+    - 一些流的实现允许你为了之后再次读取，向流中推入数据，比如PushbackInputStream。但是你推入的数据有限，而且你也不能像数组中那样，
+    随意遍历数据。数据只能被顺序读取。
+    - 基于字节的经常称作流stream，比如InputStream or OutputStream。这些流读取或者写入原始字符数据，
+    DataInputStream and DataOutputStream是例外，他们可能读写基础数据类型，比如int, long, float and double values.
+    - 基于字符的经常读入器和写出器"Reader" or "Writer"。
+    - 基于字符的流可以读入一个Latin1（ISO-8859-1）或者UNICODE编码下的一个字符。
+    
+### 输入流InputStream
+    - java.io.InputStream 是java io输入流的父类。如果你的组件要从流中读入数据，你要继承这个逼，而不是子类。这样能保证你的代码能接受
+    所有种类的输入流，而不是某一种具体的子类型。
+    - 也不是所有都能基于InputStream，如果你需要向流中回写数据，需要基于PushbackInputStream。
+    - 通常调用read()方法。翻译一个int类型的byte值，结束返回-1.
+    ``` java
+    InputStream input = new FileInputStream("c:\\data\\input-file.txt");
+    
+    int data = input.read();
+    
+    while(data != -1){
+      data = input.read();
+    }
+    ```
+### 输出流OutputStream
+    - java.io.OutputStream是输出流的父类。
+    ``` java
+    OutputStream output = new FileOutputStream("c:\\data\\output-file.txt");
+    output.write("Hello World".getBytes());
+    output.close(); 
+    ```
+    
+### 结合流Combining Streams
+    - 你可以用缓存流BufferedInputStream包装输入流InputStream， BufferedOutputStream也一样。
+    - 你也可以用PushbackStream包装输入流。
+    - 或者合并两个输入流到一个 SequenceInputStream时序输入流
+    - 自定义类的的包装流
+                                                
+    ``` java
+    InputStream input = new BufferedInputStream(
+                            new FileInputStream("c:\\data\\input-file.txt"));
+    ```
+    
+## Java IO: 输入解析
+    - String.replace()可以替换，但是每次替换都创建一个对象副本。 O(N * M)，N是String长度，M执行替换次数
+    
+## Java IO: 读入器和写出器Readers and Writers
+
+    - 和InputStream 、 OutputStream类似，只是基于字符单位
+### Reader
+    - 包含BufferedReader, PushbackReader, InputStreamReader, StringReader等子类
+    ``` java
+        Reader reader = new FileReader("c:\\data\\myfile.txt");
+    
+        int data = reader.read();
+        while(data != -1){
+            char dataChar = (char) data;
+            data = reader.read();
+        }
+    ```
+    - 这并不意味着并不代表每次read读入2个字节的char，这个看具体编码。
+    
+### 结合InputStreams的Reader
+    ``` java
+    Reader reader = new InputStreamReader(inputStream);
+    ``` 
+    
+### Writer
+
+    - 包括BufferedWriter 、 PrintWriter
+    ``` java
+        Writer writer = new FileWriter("c:\\data\\file-output.txt");
+        
+        writer.write("Hello World Writer");
+        writer.close();
+    ``` 
+    
+### 结合Reader和Writers
+    ``` java
+    Reader reader = new BufferedReader(new FileReader(...));
+    
+    Writer writer = new BufferedWriter(new FileWriter(...));
+    ``` 
+## Java IO: 并发IO
+    - 如果你不能保证确定每个线程读取多少数据，或者按什么顺序去写出的话，就不应该有一个以上的线程同时从InputStream 或 Reader读取数据，
+    也不应该有一个以上的线程同时向OutputStream或 Writer写入数据
+    - 如果涉及到不同线程，处理不同数据顺序生命周期，要注意，线程间处理流的代码需要加synchronized
+    - 在  Java NIO中，你可以用一个线程通过多个channel渠道读入或者写出数据。例如，你有许多建立的网络连接，但是每个连接上只有少量数据
+    （聊天服务器），你可以用一个线程监控多个channel（连接）。
+    
+## Java IO: 异常处理
+    - Streams and Readers / Writers 用完通过调用后close()关闭。 
+    - finally中关闭
+    - finally中抛出错误怎么办？再try catch
+    - close报错呢？异常处理模板。java7以后不用人为处理了？？？
+    
+## Java InputStream输入流
+    - 与数据源相关
+    ``` java
+        InputStream inputstream = new FileInputStream("c:\\data\\input-text.txt");
+        
+        int data = inputstream.read();
+        while(data != -1) {
+          //do something with data...
+          doSomethingWithData(data);
+        
+          data = inputstream.read();
+        }
+        inputstream.close();
+    ``` 
+### 子类
+    - ByteArrayInputStream
+    - FileInputStream
+    - PipedInputStream
+    - BufferedInputStream
+    - FilterInputStream
+    - PushbackInputStream
+    - DataInputStream
+    - ObjectInputStream
+    - SequenceInputStream
+
+### read()方法
+    - InputStream的read()方法返回int类型的byte值。结尾返回-1的int类型
+    -  DataInputStream可以读基础类型
+    
+### read(byte[])方法     
+    - 读入byte数组，返回真实读入的长度。
+    
+### 读入性能
+    - 读数组性能要比单独读入一个字节性能更好
+    - 好可能10倍10倍给你凉爽
+    - 读取速率决定于你定义的数组长度，操作系统或者硬件等。
+    - bugffer 尺寸8kb会更大加速你的读取速率。
+    - 但是你的数组容量超过了底层操作或者硬件能力，你可能得不到一个效率提升。
+    
+### 通过BufferedInputStream的透明缓存
+    - Java BufferedInputStream一次读入大量的字符
+    - 也有较大速度提升
+    - 是InputStream子类，InputStream能用BufferedInputStream就能用
+    ``` java
+        InputStream input = new BufferedInputStream(
+                              new FileInputStream("c:\\data\\input-file.txt"),
+                                1024 * 1024        /* buffer size */
+            );
+    ```
+    
+### mark() and reset()方法
+
+    - 子类不一定支持，如果支持的话，需要重写markSupported()返回true
+    - mark()方法标记当前已经读到数据的位置。可以用read方法从该处继续读取。reset方法再回到mark位置重新读取
+    
+### 关闭输入流
+    - try-catch
+###  InputStream 转 Reader
+    ``` java
+    InputStream inputStream       = new FileInputStream("c:\\data\\input.txt");
+    Reader      inputStreamReader = new InputStreamReader(inputStream);
+    ```
+
+## Java OutputStream输出流
+
+    - 输出流和目标数据相关
+### write(byte)方法
+
+    - 接受int型byte值
+    
+## Java RandomAccessFile随机访问
+
+    ``` java
+    RandomAccessFile file = new RandomAccessFile("c:\\data\\file.txt", "rw");
+    ```
+    - "rw"读写模式
+    
+### Access Modes存取模式
+| Mode | Description |
+|:--:|:--:|
+| r | 读. 调用写模式导致IO异常 |
+| rw | 读写. |
+| rwd | 同步读写模式.所有文件更新同步写入磁盘 |
+| rws | 同步读写模式.所有文件或者元数据更新同步写入磁盘 
+
+### 在RandomAccessFile文件中查找
+
+在RandomAccessFile文件中进行读写操作，需要先定位文件指针在要读写的位置，也称作seek
+
+    ``` java
+    RandomAccessFile file = new RandomAccessFile("c:\\data\\file.txt", "rw");
+    
+    file.seek(200);
+
+    ```
+    
+### 获取文件位置
+
+    ``` java
+    long position = file.getFilePointer();
+
+    ```
+    
+### 读取字节
+
+    ``` java
+    RandomAccessFile file = new RandomAccessFile("c:\\data\\file.txt", "rw");
+    
+    int aByte = file.read();
+    
+    byte[] dest      = new byte[1024];
+    int    offset    = 0;
+    int    length    = 1024;
+    int    bytesRead = randomAccessFile.read(dest, offset, length);
+
+    ```
+    
+### 写入
+
+    ``` java
+    RandomAccessFile file = new RandomAccessFile("c:\\data\\file.txt", "rw");
+    
+    file.write(65); // ASCII code for A
+    
+    byte[] bytes = "Hello World".getBytes("UTF-8");
+    file.write(bytes, 2, 5);
+
+    ```
+    
+### Java File
+
+Xy1018421411563
+
 
 ## <a id="FileInputStream">Java FileInputStream</a>
 
