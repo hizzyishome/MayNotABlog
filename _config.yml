@@ -91,3 +91,6 @@ mermaid: ## mermaid url https://github.com/knsv/mermaid
   version: "8.4.8"
   options:  # find more api options from https://github.com/knsv/mermaid/blob/master/src/mermaidAPI.js
   #startOnload: true  // default true
+
+encrypt:
+  enable: true

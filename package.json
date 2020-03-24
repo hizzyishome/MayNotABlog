@@ -8,6 +8,7 @@
   "dependencies": {
     "hexo": "^3.7.1",
     "hexo-asset-image": "git+https://github.com/CodeFalling/hexo-asset-image.git",
+    "hexo-blog-encrypt": "^3.0.12",
     "hexo-deployer-git": "^0.3.1",
     "hexo-filter-flowchart": "^1.0.4",
     "hexo-generator-archive": "^0.1.4",
